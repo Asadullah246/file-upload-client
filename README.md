@@ -1,73 +1,144 @@
-# React + TypeScript + Vite
+# 🌐 File Upload Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> A modern React + Vite frontend for streaming large files from **Google Drive to Cloudflare R2**. Features real-time upload progress tracking, file management, and a clean responsive UI built with Tailwind CSS v4.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## React Compiler
+- 🔗 **Paste any Google Drive link** — supports all public share URL formats
+- 📊 **Real-time progress** — live progress bars via polling while uploads stream in the background
+- 🗂️ **File management** — list all uploads with size, status, and timestamp; delete files with one click
+- 🎨 **Modern UI** — built with Tailwind CSS v4, lucide-react icons, and smooth transitions
+- 📱 **Responsive** — works across all screen sizes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🧰 Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Layer           | Technology      |
+| --------------- | --------------- |
+| Framework       | React 19        |
+| Build tool      | Vite 7          |
+| Language        | TypeScript 5    |
+| Styling         | Tailwind CSS v4 |
+| HTTP client     | Axios           |
+| Icons           | lucide-react    |
+| Date formatting | date-fns        |
+| Package manager | pnpm            |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📁 Project Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── FileList.tsx        # File table with status, progress, delete
+│   │   └── UploadForm.tsx      # Google Drive URL input + submit
+│   ├── services/
+│   │   └── api.ts              # Axios API client + FileRecord type
+│   ├── App.tsx                 # Root component + polling logic
+│   ├── index.css               # Tailwind v4 + CSS design tokens
+│   └── main.tsx                # React entry point
+├── public/
+├── .env                        # Environment variables (not committed)
+├── vite.config.ts
+└── tsconfig.json
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## ⚙️ Environment Variables
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Create a `.env` file in the `frontend/` directory:
+
+```env
+VITE_API_URL=http://localhost:3030
 ```
+
+For production, set this to your deployed backend URL:
+
+```env
+VITE_API_URL=https://your-backend-domain.com
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 22+
+- pnpm
+- Backend server running (see [backend README](../backend/README.md))
+
+### Local Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm run dev
+```
+
+App starts at `http://localhost:5173`
+
+### Production Build
+
+```bash
+pnpm run build      # Outputs to dist/
+pnpm run preview    # Preview the production build locally
+```
+
+---
+
+## 🔄 How It Works
+
+1. User pastes a public Google Drive link and clicks **Upload**
+2. Frontend calls `POST /files/upload` → backend responds immediately with a `PENDING` record
+3. Frontend polls `GET /files` every **3 seconds** while any file is in `PENDING` or `DOWNLOADING` state
+4. Progress bars update in real time as the backend streams the file to R2
+5. Status changes to `COMPLETED` (or `FAILED`) when the upload finishes
+
+### File Status States
+
+| Status        | Meaning                            |
+| ------------- | ---------------------------------- |
+| `PENDING`     | Upload queued, waiting to start    |
+| `DOWNLOADING` | Actively streaming from Drive → R2 |
+| `COMPLETED`   | File is available in R2            |
+| `FAILED`      | Upload failed (check backend logs) |
+
+---
+
+## 🌐 Deployment (Vercel)
+
+The frontend deploys to Vercel with zero configuration:
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel --prod
+```
+
+Or connect your GitHub repository directly in the Vercel dashboard. Set the **Root Directory** to `frontend/` and add the environment variable:
+
+```
+VITE_API_URL=https://your-backend-domain.com
+```
+
+---
+
+## 📜 Scripts
+
+| Script             | Description                       |
+| ------------------ | --------------------------------- |
+| `pnpm run dev`     | Start Vite dev server with HMR    |
+| `pnpm run build`   | Type-check + build for production |
+| `pnpm run preview` | Preview production build locally  |
+| `pnpm run lint`    | Run ESLint                        |
