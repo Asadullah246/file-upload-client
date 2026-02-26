@@ -3,6 +3,20 @@ import { UploadForm } from "./components/UploadForm";
 import { FileList } from "./components/FileList";
 import { fileService, type FileRecord } from "./services/api";
 import { CloudLightning } from "lucide-react";
+import { isAxiosError } from "axios";
+
+/** Extracts a human-readable message from an unknown error value. */
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (isAxiosError(err)) {
+    return (
+      (err.response?.data as { error?: string })?.error ??
+      err.message ??
+      fallback
+    );
+  }
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
 
 function App() {
   const [files, setFiles] = useState<FileRecord[]>([]);
@@ -13,7 +27,7 @@ function App() {
     try {
       const data = await fileService.getFiles();
       setFiles(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch files:", err);
     }
   };
@@ -43,10 +57,8 @@ function App() {
       setError(null);
       await fileService.uploadFile(url);
       await fetchFiles(); // Refresh list immediately to show PENDING state
-    } catch (err: any) {
-      setError(
-        err.response?.data?.error || err.message || "Failed to start upload",
-      );
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err, "Failed to start upload"));
     } finally {
       setIsLoading(false);
     }
@@ -56,8 +68,8 @@ function App() {
     try {
       await fileService.deleteFile(id);
       await fetchFiles();
-    } catch (err: any) {
-      alert(err.response?.data?.error || "Failed to delete file");
+    } catch (err: unknown) {
+      alert(extractErrorMessage(err, "Failed to delete file"));
     }
   };
 
