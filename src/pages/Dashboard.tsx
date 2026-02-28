@@ -79,11 +79,11 @@ export function Dashboard() {
         <div className="text-center mb-12">
           <CloudLightning className="mx-auto h-16 w-16 text-primary mb-4" />
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
-            Cloudflare R2 Bridge
+            Multi-Cloud Storage Bridge
           </h1>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-muted-foreground sm:mt-4">
-            Directly stream massive files from Google Drive to your S3 bucket
-            without using local storage.
+            Directly stream massive files from Google Drive to multiple cloud
+            storage providers without using local storage.
           </p>
         </div>
 
