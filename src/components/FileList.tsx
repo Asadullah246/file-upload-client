@@ -64,6 +64,14 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
 
   const handleDownload = (provider: string) => {
     setOpen(false);
+
+    if (provider === "vikingfile") {
+      // VikingFile requires Cloudflare challenge — open their browse page in a new tab
+      const browseUrl = `https://vikingfile.com/f/${file.vikingfileId}`;
+      window.open(browseUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     const url = `${apiBase}/api/download/${file.id}/proxy?provider=${provider}`;
     const a = document.createElement("a");
     a.href = url;
@@ -177,7 +185,7 @@ export function FileList({ files, onDelete }: FileListProps) {
   };
 
   return (
-    <div className="bg-card shadow-sm rounded-lg border border-border overflow-hidden">
+    <div className="bg-card shadow-sm rounded-lg border border-border">
       <ul className="divide-y divide-border">
         {files.map((file) => (
           <li key={file.id} className="p-4 hover:bg-muted/30 transition-colors">

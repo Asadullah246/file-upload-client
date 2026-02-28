@@ -14,6 +14,7 @@ interface FileDetails {
   originalName: string;
   mimeType: string | null;
   size: string | null;
+  vikingfileUrl: string | null;
   providers: {
     r2?: boolean;
     pixeldrain?: boolean;
@@ -92,13 +93,21 @@ export function DownloadPage() {
   };
 
   /**
-   * Triggers a proxy download by creating a temporary <a> element.
-   * The download attribute ensures browser saves the file instead of navigating.
+   * VikingFile redirects to their browse page (Cloudflare-protected download).
+   * All other providers stream through our backend proxy.
    */
   const handleDownload = (provider: string) => {
     if (!fileDetails) return;
-    setDownloading(provider);
 
+    if (provider === "vikingfile") {
+      const browseUrl =
+        fileDetails.vikingfileUrl ||
+        `https://vikingfile.com/f/${fileDetails.id}`;
+      window.open(browseUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    setDownloading(provider);
     const proxyUrl = `${apiBase}/api/download/${fileDetails.id}/proxy?provider=${provider}`;
     const link = document.createElement("a");
     link.href = proxyUrl;
@@ -106,8 +115,6 @@ export function DownloadPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    // Reset spinner after a short delay
     setTimeout(() => setDownloading(null), 2000);
   };
 
