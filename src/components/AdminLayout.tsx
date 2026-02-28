@@ -1,6 +1,6 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings as SettingsIcon } from "lucide-react";
 
 export function AdminLayout() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -15,8 +15,19 @@ export function AdminLayout() {
         <div className="font-semibold text-lg text-foreground">
           Admin Dashboard
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">{user?.email}</span>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground mr-2">
+              {user?.email}
+            </span>
+            <Link
+              to="/settings"
+              className="text-sm flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <SettingsIcon className="w-4 h-4" />
+              Settings
+            </Link>
+          </div>
           <button
             onClick={logout}
             className="text-sm flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"

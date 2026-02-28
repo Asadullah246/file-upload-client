@@ -55,6 +55,26 @@ export const fileService = {
     }
   },
 
+  updateCredentials: async (newEmail?: string, newPassword?: string) => {
+    try {
+      const response = await api.put("/api/auth/update", {
+        newEmail,
+        newPassword,
+      });
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { error?: string } };
+        message?: string;
+      };
+      throw new Error(
+        err.response?.data?.error ||
+          err.message ||
+          "Failed to update credentials",
+      );
+    }
+  },
+
   getFiles: async (): Promise<FileRecord[]> => {
     const response = await api.get("/files");
     return response.data;
