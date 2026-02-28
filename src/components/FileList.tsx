@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import type { FileRecord } from "../services/api";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -8,12 +9,133 @@ import {
   Clock,
   ArrowDownToLine,
   HardDrive,
+  Copy,
+  Check,
+  Download,
+  ChevronDown,
 } from "lucide-react";
 import classNames from "classnames";
 
 interface FileListProps {
   files: FileRecord[];
   onDelete: (id: string) => Promise<void>;
+}
+
+const PROVIDER_META: Record<string, { label: string; icon: string }> = {
+  r2: { label: "Cloudflare R2", icon: "☁️" },
+  pixeldrain: { label: "Pixeldrain", icon: "💧" },
+  idrive: { label: "IDrive e2", icon: "🗄️" },
+  vikingfile: { label: "VikingFile", icon: "⚔️" },
+};
+
+/** Infers which providers a completed file has by checking non-null fields. */
+function inferProviders(file: FileRecord): string[] {
+  const providers: string[] = [];
+  if (file.r2Key) providers.push("r2");
+  if (file.pixeldrainId) providers.push("pixeldrain");
+  if (file.idriveKey) providers.push("idrive");
+  if (file.vikingfileId) providers.push("vikingfile");
+  return providers;
+}
+
+/** Download dropdown for a single file row.  */
+function DownloadDropdown({ file }: { file: FileRecord }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const apiBase =
+    (import.meta.env.VITE_API_URL as string | undefined) ||
+    "http://localhost:3000";
+
+  const providers = inferProviders(file);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  if (file.status !== "COMPLETED" || providers.length === 0) return null;
+
+  const handleDownload = (provider: string) => {
+    setOpen(false);
+    const url = `${apiBase}/api/download/${file.id}/proxy?provider=${provider}`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.originalName || "download";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="p-2 text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-full transition-colors flex items-center gap-0.5"
+        title="Download file"
+      >
+        <Download className="h-4 w-4" />
+        <ChevronDown className="h-3 w-3" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-1 w-48 rounded-md shadow-lg bg-popover border border-border z-50 py-1">
+          <p className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Download from
+          </p>
+          {providers.map((provider) => {
+            const meta = PROVIDER_META[provider] || {
+              label: provider,
+              icon: "📦",
+            };
+            return (
+              <button
+                key={provider}
+                onClick={() => handleDownload(provider)}
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors flex items-center gap-2"
+              >
+                <span>{meta.icon}</span>
+                {meta.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Copy-link button with icon-swap feedback (no alert). */
+function CopyLinkButton({ fileId }: { fileId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const url = `${window.location.origin}/download/${fileId}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={classNames(
+        "p-2 rounded-full transition-colors",
+        copied
+          ? "text-emerald-500 bg-emerald-500/10"
+          : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+      )}
+      title={copied ? "Copied!" : "Copy download link"}
+    >
+      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+    </button>
+  );
 }
 
 export function FileList({ files, onDelete }: FileListProps) {
@@ -84,18 +206,16 @@ export function FileList({ files, onDelete }: FileListProps) {
                   </span>
                 </div>
               </div>
-              <div>
-                <button
-                  onClick={() => {
-                    const downloadUrl = `${window.location.origin}/download/${file.id}`;
-                    navigator.clipboard.writeText(downloadUrl);
-                    alert("Public download link copied to clipboard!");
-                  }}
-                  className="p-2 text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-full transition-colors mr-2 text-sm"
-                  title="Copy download link"
-                >
-                  <File className="h-4 w-4" />
-                </button>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-1">
+                {/* Copy public download link */}
+                <CopyLinkButton fileId={file.id} />
+
+                {/* Download from a specific cloud */}
+                <DownloadDropdown file={file} />
+
+                {/* Delete */}
                 <button
                   onClick={() => onDelete(file.id)}
                   className="p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-full transition-colors"
