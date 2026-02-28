@@ -57,8 +57,11 @@ export function AdminLayout() {
                 <ChevronDown className="w-3 h-3 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5 flex flex-col sm:hidden">
+            <DropdownMenuContent
+              align="end"
+              className="w-56 rounded-md shadow-lg bg-popover border border-border py-1 px-0 overflow-hidden"
+            >
+              <div className="px-4 py-2 flex flex-col sm:hidden border-b border-border mb-1">
                 <span className="text-xs text-muted-foreground">
                   Signed in as
                 </span>
@@ -66,25 +69,22 @@ export function AdminLayout() {
                   {user?.email}
                 </span>
               </div>
-              <div className="sm:hidden">
-                <DropdownMenuSeparator />
-              </div>
 
-              <DropdownMenuItem asChild>
-                <Link
-                  to="/settings"
-                  className="w-full cursor-pointer flex items-center gap-2"
-                >
+              <DropdownMenuItem
+                asChild
+                className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted focus:text-foreground focus:bg-muted transition-colors flex items-center gap-2 rounded-none border-none cursor-pointer"
+              >
+                <Link to="/settings">
                   <SettingsIcon className="w-4 h-4" />
                   <span>Profile Settings</span>
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="h-px bg-border my-1" />
 
               <DropdownMenuItem
                 onClick={() => logout()}
-                className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 focus:text-destructive focus:bg-destructive/10 transition-colors flex items-center gap-2 rounded-none border-none cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign out</span>

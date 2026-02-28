@@ -85,8 +85,11 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <DropdownMenuContent
+        align="end"
+        className="w-48 rounded-md shadow-lg bg-popover border border-border py-1 px-0 overflow-hidden"
+      >
+        <DropdownMenuLabel className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Download from
         </DropdownMenuLabel>
         {providers.map((provider) => {
@@ -98,7 +101,7 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
             <DropdownMenuItem
               key={provider}
               onClick={() => handleDownload(provider)}
-              className="cursor-pointer flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted focus:bg-muted transition-colors flex items-center gap-2 rounded-none cursor-pointer"
             >
               <span>{meta.icon}</span>
               {meta.label}
