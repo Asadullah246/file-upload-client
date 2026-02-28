@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Upload, Link2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface UploadFormProps {
   onUploadStart: (url: string) => Promise<void>;
@@ -33,10 +34,10 @@ export function UploadForm({ onUploadStart, isLoading }: UploadFormProps) {
           disabled={isLoading}
         />
       </div>
-      <button
+      <Button
         type="submit"
         disabled={isLoading || !url.trim()}
-        className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="flex items-center justify-center px-6 py-3 h-auto border border-transparent text-base font-medium rounded-lg shadow-sm transition-all"
       >
         {isLoading ? (
           <Loader2 className="animate-spin h-5 w-5 mr-2" />
@@ -44,7 +45,7 @@ export function UploadForm({ onUploadStart, isLoading }: UploadFormProps) {
           <Upload className="h-5 w-5 mr-2" />
         )}
         Transfer
-      </button>
+      </Button>
     </form>
   );
 }
