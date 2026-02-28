@@ -59,7 +59,7 @@ export function AdminLayout() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-56 rounded-md shadow-lg bg-popover border border-border py-1 px-0 overflow-hidden"
+              className="w-56 rounded-md shadow-lg bg-white dark:bg-zinc-900 border border-border py-1 px-0 overflow-hidden z-[9999]"
             >
               <div className="px-4 py-2 flex flex-col sm:hidden border-b border-border mb-1">
                 <span className="text-xs text-muted-foreground">

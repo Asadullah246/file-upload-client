@@ -87,7 +87,7 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
 
       <DropdownMenuContent
         align="end"
-        className="w-48 rounded-md shadow-lg bg-popover border border-border py-1 px-0 overflow-hidden"
+        className="w-48 rounded-md shadow-lg bg-white dark:bg-zinc-900 border border-border py-1 px-0 overflow-hidden z-[9999]"
       >
         <DropdownMenuLabel className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Download from
