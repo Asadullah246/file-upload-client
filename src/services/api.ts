@@ -22,6 +22,11 @@ export const fileService = {
     return response.data.file;
   },
 
+  login: async (email: string, password: string) => {
+    const response = await api.post("/auth/login", { email, password });
+    return response.data;
+  },
+
   getFiles: async (): Promise<FileRecord[]> => {
     const response = await api.get("/files");
     return response.data;

@@ -86,6 +86,17 @@ export function FileList({ files, onDelete }: FileListProps) {
               </div>
               <div>
                 <button
+                  onClick={() => {
+                    const downloadUrl = `${window.location.origin}/download/${file.id}`;
+                    navigator.clipboard.writeText(downloadUrl);
+                    alert("Public download link copied to clipboard!");
+                  }}
+                  className="p-2 text-muted-foreground hover:bg-primary/10 hover:text-primary rounded-full transition-colors mr-2 text-sm"
+                  title="Copy download link"
+                >
+                  <File className="h-4 w-4" />
+                </button>
+                <button
                   onClick={() => onDelete(file.id)}
                   className="p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-full transition-colors"
                   title="Delete file"

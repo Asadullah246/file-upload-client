@@ -1,104 +1,27 @@
-import { useEffect, useState } from "react";
-import { UploadForm } from "./components/UploadForm";
-import { FileList } from "./components/FileList";
-import { fileService, type FileRecord } from "./services/api";
-import { CloudLightning } from "lucide-react";
-import { isAxiosError } from "axios";
-
-/** Extracts a human-readable message from an unknown error value. */
-function extractErrorMessage(err: unknown, fallback: string): string {
-  if (isAxiosError(err)) {
-    return (
-      (err.response?.data as { error?: string })?.error ??
-      err.message ??
-      fallback
-    );
-  }
-  if (err instanceof Error) return err.message;
-  return fallback;
-}
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { AdminLayout } from "./components/AdminLayout";
+import { Login } from "./pages/Login";
+import { Dashboard } from "./pages/Dashboard";
+import { DownloadPage } from "./pages/Download";
 
 function App() {
-  const [files, setFiles] = useState<FileRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchFiles = async () => {
-    try {
-      const data = await fileService.getFiles();
-      setFiles(data);
-    } catch (err: unknown) {
-      console.error("Failed to fetch files:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchFiles();
-
-    // Poll for updates every 3 seconds if any file is PENDING or DOWNLOADING
-    const interval = setInterval(() => {
-      setFiles((currentFiles) => {
-        const needsUpdate = currentFiles.some(
-          (f) => f.status === "PENDING" || f.status === "DOWNLOADING",
-        );
-        if (needsUpdate) {
-          fetchFiles();
-        }
-        return currentFiles;
-      });
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleUploadStart = async (url: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      await fileService.uploadFile(url);
-      await fetchFiles(); // Refresh list immediately to show PENDING state
-    } catch (err: unknown) {
-      setError(extractErrorMessage(err, "Failed to start upload"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await fileService.deleteFile(id);
-      await fetchFiles();
-    } catch (err: unknown) {
-      alert(extractErrorMessage(err, "Failed to delete file"));
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12">
-          <CloudLightning className="mx-auto h-16 w-16 text-primary mb-4" />
-          <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
-            Cloudflare R2 Bridge
-          </h1>
-          <p className="mt-3 max-w-2xl mx-auto text-xl text-muted-foreground sm:mt-4">
-            Directly stream massive files from Google Drive to your S3 bucket
-            without using local storage.
-          </p>
-        </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/download/:id" element={<DownloadPage />} />
 
-        {error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm font-medium">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-8">
-          <UploadForm onUploadStart={handleUploadStart} isLoading={isLoading} />
-          <FileList files={files} onDelete={handleDelete} />
-        </div>
-      </div>
-    </div>
+          {/* Protected Admin Routes */}
+          <Route element={<AdminLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
