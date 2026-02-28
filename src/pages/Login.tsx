@@ -21,6 +21,7 @@ export function Login() {
       const response = await fileService.login(email, password);
       login(response.token, response.user);
     } catch (err: unknown) {
+      console.error("[Frontend Login] Caught error:", err);
       const errorResponse = err as { response?: { data?: { error?: string } } };
       setError(
         errorResponse.response?.data?.error ||
