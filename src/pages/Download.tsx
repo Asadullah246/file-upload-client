@@ -179,6 +179,56 @@ export function DownloadPage() {
                 </p>
               ) : (
                 availableProviders.map(([provider]) => {
+                  if (provider === "idrive") {
+                    const idriveOptions = [
+                      {
+                        key: "idrive-instant",
+                        label: "Instant Download",
+                        color: "bg-green-600 hover:bg-green-700",
+                        icon: "🚀",
+                      },
+                      {
+                        key: "idrive-fast",
+                        label: "Fast Cloud [FSL]",
+                        color: "bg-emerald-600 hover:bg-emerald-700",
+                        icon: "⚡",
+                      },
+                      {
+                        key: "idrive-resumable",
+                        label: "Cloud [Resumable]",
+                        color: "bg-teal-600 hover:bg-teal-700",
+                        icon: "🔄",
+                      },
+                    ];
+
+                    return (
+                      <div key={provider} className="space-y-3">
+                        {idriveOptions.map((opt) => {
+                          const isDownloading = downloading === provider;
+                          return (
+                            <button
+                              key={opt.key}
+                              onClick={() => handleDownload(provider)}
+                              disabled={isDownloading}
+                              className={`w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white ${opt.color} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait`}
+                            >
+                              {isDownloading ? (
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              ) : (
+                                <Download className="mr-2 h-5 w-5" />
+                              )}
+                              <span className="mr-2">{opt.icon}</span>
+                              {isDownloading
+                                ? "Starting download..."
+                                : opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+
+                  // Render single button for all other providers
                   const meta = PROVIDER_META[provider] || {
                     label: provider,
                     color: "bg-primary hover:bg-primary/90",
