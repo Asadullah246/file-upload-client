@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fileService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { CloudLightning, Lock, Eye, EyeOff } from "lucide-react";
@@ -9,6 +10,7 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const { login } = useAuth();
 
@@ -20,6 +22,7 @@ export function Login() {
     try {
       const response = await fileService.login(email, password);
       login(response.token, response.user);
+      navigate("/dashboard");
     } catch (err: unknown) {
       console.error("[Frontend Login] Caught error:", err);
       const errorResponse = err as { response?: { data?: { error?: string } } };
