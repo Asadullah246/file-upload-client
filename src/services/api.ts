@@ -89,6 +89,19 @@ export const fileService = {
     return response.data;
   },
 
+  /**
+   * Fetches a zero-bandwidth direct download URL for the given provider.
+   */
+  getDirectUrl: async (
+    id: string,
+    provider: string,
+  ): Promise<{ url: string }> => {
+    const response = await api.get(
+      `/api/download/${id}/direct-url?provider=${provider}`,
+    );
+    return response.data;
+  },
+
   deleteFile: async (id: string): Promise<void> => {
     await api.delete(`/files/${id}`);
   },
