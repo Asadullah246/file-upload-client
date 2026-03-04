@@ -137,3 +137,19 @@ export const credentialService = {
   },
 };
 
+export const settingsService = {
+  /**
+   * Public — used by the Download page to fetch ad codes and telegram link.
+   */
+  getPublicSettings: async (): Promise<Record<string, string>> => {
+    const response = await api.get("/api/settings");
+    return response.data;
+  },
+
+  /**
+   * Admin-only — saves all app settings at once.
+   */
+  updateSettings: async (settings: Record<string, string>): Promise<void> => {
+    await api.put("/api/settings", { settings });
+  },
+};
