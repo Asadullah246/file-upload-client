@@ -79,7 +79,6 @@ const PROVIDERS: ProviderDef[] = [
             { key: "accessKeyId", label: "Access Key ID", placeholder: "AKIAIOSFODNN7EXAMPLE" },
             { key: "secretAccessKey", label: "Secret Access Key", placeholder: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", secret: true },
             { key: "bucketName", label: "Bucket Name", placeholder: "my-r2-bucket" },
-            { key: "publicUrl", label: "Public URL (optional)", placeholder: "https://files.yourdomain.com" },
         ],
     },
 ];
