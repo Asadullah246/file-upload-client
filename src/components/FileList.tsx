@@ -34,6 +34,7 @@ const PROVIDER_META: Record<string, { label: string; icon: string }> = {
   pixeldrain: { label: "Pixeldrain", icon: "💧" },
   idrive: { label: "IDrive e2", icon: "🗄️" },
   vikingfile: { label: "VikingFile", icon: "⚔️" },
+  gofile: { label: "GoFile", icon: "🗂️" },
 };
 
 /** Infers which providers a completed file has by checking non-null fields. */
@@ -43,6 +44,7 @@ function inferProviders(file: FileRecord): string[] {
   if (file.pixeldrainId) providers.push("pixeldrain");
   if (file.idriveKey) providers.push("idrive");
   if (file.vikingfileId) providers.push("vikingfile");
+  if (file.gofileId) providers.push("gofile");
   return providers;
 }
 
@@ -61,6 +63,14 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
       // VikingFile requires Cloudflare challenge — open their browse page in a new tab
       const browseUrl = `https://vikingfile.com/f/${file.vikingfileId}`;
       window.open(browseUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (provider === "gofile") {
+      const browseUrl = file.gofileUrl;
+      if (browseUrl) {
+        window.open(browseUrl, "_blank", "noopener,noreferrer");
+      }
       return;
     }
 
@@ -236,23 +246,23 @@ export function FileList({ files, onDelete }: FileListProps) {
 
                   {(file.status === "DOWNLOADING" ||
                     file.status === "PENDING") && (
-                    <div className="mt-4 w-full bg-secondary rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className={classNames(
-                          "bg-primary h-1.5 rounded-full transition-all duration-300",
-                          file.status === "PENDING"
-                            ? "w-full animate-pulse bg-primary/40"
-                            : "",
-                        )}
-                        style={{
-                          width:
-                            file.status === "DOWNLOADING"
-                              ? `${file.progress}%`
-                              : undefined,
-                        }}
-                      />
-                    </div>
-                  )}
+                      <div className="mt-4 w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={classNames(
+                            "bg-primary h-1.5 rounded-full transition-all duration-300",
+                            file.status === "PENDING"
+                              ? "w-full animate-pulse bg-primary/40"
+                              : "",
+                          )}
+                          style={{
+                            width:
+                              file.status === "DOWNLOADING"
+                                ? `${file.progress}%`
+                                : undefined,
+                          }}
+                        />
+                      </div>
+                    )}
                 </div>
               </TableCell>
             </TableRow>

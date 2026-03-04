@@ -31,6 +31,8 @@ export interface FileRecord {
   pixeldrainId: string | null;
   idriveKey: string | null;
   vikingfileId: string | null;
+  gofileId: string | null;
+  gofileUrl: string | null;
 }
 
 export const fileService = {
@@ -69,8 +71,8 @@ export const fileService = {
       };
       throw new Error(
         err.response?.data?.error ||
-          err.message ||
-          "Failed to update credentials",
+        err.message ||
+        "Failed to update credentials",
       );
     }
   },

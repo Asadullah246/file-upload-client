@@ -10,11 +10,13 @@ export interface FileDetails {
   mimeType: string | null;
   size: string | null;
   vikingfileUrl: string | null;
+  gofileUrl: string | null;
   providers: {
     r2?: boolean;
     pixeldrain?: boolean;
     idrive?: boolean;
     vikingfile?: boolean;
+    gofile?: boolean;
   };
 }
 
@@ -40,7 +42,7 @@ export function DownloadPage() {
         };
         setError(
           errorResponse.response?.data?.error ||
-            "File not found or no longer available.",
+          "File not found or no longer available.",
         );
       } finally {
         setIsLoading(false);

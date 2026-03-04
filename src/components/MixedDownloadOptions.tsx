@@ -156,6 +156,23 @@ export function MixedDownloadOptions({
         </button>
       )}
 
+      {/* GoFile: Direct URL page */}
+      {hasProvider("gofile") && (
+        <button
+          onClick={() => handleDirectDownload("gofile", "gofile")}
+          disabled={downloading !== null}
+          className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
+        >
+          {downloading === "gofile" ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <Zap className="mr-2 h-5 w-5" />
+          )}
+          <span className="mr-2">🗂️</span>
+          {downloading === "gofile" ? "Starting..." : "GoFile Server"}
+        </button>
+      )}
+
       {availableProviders.length === 0 && (
         <p className="text-center text-sm text-destructive">
           No download sources are currently available.
