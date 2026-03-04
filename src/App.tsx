@@ -5,6 +5,7 @@ import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { DownloadPage } from "./pages/Download";
 import { Settings } from "./pages/Settings";
+import { CloudControls } from "./pages/CloudControls";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route element={<AdminLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/cloud-controls" element={<CloudControls />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>

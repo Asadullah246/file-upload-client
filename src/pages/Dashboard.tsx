@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { UploadForm } from "../components/UploadForm";
 import { FileList } from "../components/FileList";
-import { fileService, type FileRecord } from "../services/api";
+import { fileService, credentialService, type FileRecord } from "../services/api";
 import { CloudLightning } from "lucide-react";
 import { isAxiosError } from "axios";
 
@@ -22,6 +22,7 @@ export function Dashboard() {
   const [files, setFiles] = useState<FileRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeProviders, setActiveProviders] = useState<string[]>([]);
 
   const fetchFiles = async () => {
     try {
@@ -32,8 +33,18 @@ export function Dashboard() {
     }
   };
 
+  const fetchActiveProviders = async () => {
+    try {
+      const creds = await credentialService.getAll();
+      setActiveProviders(creds.filter((c) => c.enabled).map((c) => c.provider));
+    } catch {
+      setActiveProviders([]);
+    }
+  };
+
   useEffect(() => {
     fetchFiles();
+    fetchActiveProviders();
 
     // Poll for updates every 3 seconds if any file is PENDING or DOWNLOADING
     const interval = setInterval(() => {
@@ -94,7 +105,11 @@ export function Dashboard() {
         )}
 
         <div className="space-y-8">
-          <UploadForm onUploadStart={handleUploadStart} isLoading={isLoading} />
+          <UploadForm
+            onUploadStart={handleUploadStart}
+            isLoading={isLoading}
+            activeProviders={activeProviders}
+          />
           <FileList files={files} onDelete={handleDelete} />
         </div>
       </div>

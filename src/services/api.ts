@@ -108,3 +108,32 @@ export const fileService = {
     await api.delete(`/files/${id}`);
   },
 };
+
+export interface CredentialRecord {
+  id: string;
+  provider: string;
+  enabled: boolean;
+  config: Record<string, string>;
+  updatedAt: string;
+}
+
+export const credentialService = {
+  getAll: async (): Promise<CredentialRecord[]> => {
+    const response = await api.get("/api/credentials");
+    console.log("response", response.data);
+    return response.data;
+  },
+
+  update: async (
+    provider: string,
+    enabled: boolean,
+    config: Record<string, string>,
+  ): Promise<CredentialRecord> => {
+    const response = await api.put(`/api/credentials/${provider}`, {
+      enabled,
+      config,
+    });
+    return response.data;
+  },
+};
+
