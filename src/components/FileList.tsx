@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FileRecord } from "../services/api";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -13,6 +13,7 @@ import {
   Check,
   Download,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
 import classNames from "classnames";
 import {
@@ -150,6 +151,118 @@ function CopyLinkButton({ fileId }: { fileId: string }) {
   );
 }
 
+const formatSize = (bytes: string | null) => {
+  if (!bytes) return "Unknown size";
+  const num = Number(bytes);
+  if (num < 1024) return `${num} B`;
+  if (num < 1024 * 1024) return `${(num / 1024).toFixed(1)} KB`;
+  if (num < 1024 * 1024 * 1024)
+    return `${(num / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(num / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+};
+
+const StatusIcon = ({ status }: { status: string }) => {
+  switch (status) {
+    case "COMPLETED":
+      return <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
+    case "FAILED":
+      return <XCircle className="h-5 w-5 text-destructive" />;
+    case "DOWNLOADING":
+      return <ArrowDownToLine className="h-5 w-5 text-blue-500 animate-pulse" />;
+    default:
+      return <Clock className="h-5 w-5 text-yellow-500" />;
+  }
+};
+
+function FileRow({ file, onDelete }: { file: FileRecord; onDelete: (id: string) => Promise<void> }) {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (file.status === "COMPLETED" || file.status === "FAILED") return;
+    const interval = setInterval(() => setNow(Date.now()), 100);
+    return () => clearInterval(interval);
+  }, [file.status]);
+
+  const createdAtTime = new Date(file.createdAt).getTime();
+  const elapsed = now - createdAtTime;
+
+  const isFakeCompleted = elapsed >= 2000;
+  const fakeProgress = Math.min(100, (elapsed / 2000) * 100);
+
+  let displayStatus = file.status;
+  if (file.status !== "FAILED" && file.status !== "COMPLETED") {
+    displayStatus = isFakeCompleted ? "COMPLETED" : "DOWNLOADING";
+  }
+
+  return (
+    <TableRow className="hover:bg-muted/30 transition-colors group">
+      <TableCell className="p-0 border-0">
+        <div className="p-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex-shrink-0">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <File className="h-6 w-6 text-primary" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
+                {file.originalName || "Unknown file"}
+              </p>
+              <div className="flex items-center mt-1 space-x-2 text-xs text-muted-foreground">
+                <span className="flex items-center space-x-1">
+                  <StatusIcon status={displayStatus} />
+                  <span className="capitalize">{displayStatus.toLowerCase()}</span>
+                </span>
+                <span>•</span>
+                <span>{formatSize(file.size)}</span>
+                <span>•</span>
+                <span>{formatDistanceToNow(new Date(file.createdAt))} ago</span>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              <CopyLinkButton fileId={file.id} />
+
+              {/* Download from a specific cloud */}
+              {file.status === "COMPLETED" ? (
+                <DownloadDropdown file={file} />
+              ) : file.status === "FAILED" ? (
+                <div className="flex items-center text-xs font-medium text-destructive bg-destructive/10 px-2.5 py-1.5 rounded-md max-w-sm text-wrap truncate" title={file.error || "Upload failed"}>
+                  {file.error || "Upload failed"}
+                </div>
+              ) : (
+                <div className="flex items-center text-xs font-medium text-muted-foreground bg-muted/50 px-2.5 py-1.5 rounded-full">
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                  Processing...
+                </div>
+              )}
+
+              {/* Delete */}
+              <button
+                onClick={() => onDelete(file.id)}
+                className="p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-full transition-colors"
+                title="Delete file"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {displayStatus === "DOWNLOADING" && (
+            <div className="mt-4 w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-primary h-1.5 rounded-full transition-all duration-100 ease-linear"
+                style={{ width: `${fakeProgress}%` }}
+              />
+            </div>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export function FileList({ files, onDelete }: FileListProps) {
   if (files.length === 0) {
     return (
@@ -163,109 +276,12 @@ export function FileList({ files, onDelete }: FileListProps) {
     );
   }
 
-  const formatSize = (bytes: string | null) => {
-    if (!bytes) return "Unknown size";
-    const num = Number(bytes);
-    if (num < 1024) return `${num} B`;
-    if (num < 1024 * 1024) return `${(num / 1024).toFixed(1)} KB`;
-    if (num < 1024 * 1024 * 1024)
-      return `${(num / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(num / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-  };
-
-  const StatusIcon = ({ status }: { status: FileRecord["status"] }) => {
-    switch (status) {
-      case "COMPLETED":
-        return <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
-      case "FAILED":
-        return <XCircle className="h-5 w-5 text-destructive" />;
-      case "DOWNLOADING":
-        return (
-          <ArrowDownToLine className="h-5 w-5 text-blue-500 animate-pulse" />
-        );
-      default:
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-    }
-  };
-
   return (
-    <div className="bg-card shadow-sm rounded-lg border border-border overflow-hidden">
-      <Table>
+    <div className="bg-card shadow-sm rounded-lg border border-border overflow-hidden overflow-x-auto">
+      <Table className="min-w-[800px]">
         <TableBody>
           {files.map((file) => (
-            <TableRow
-              key={file.id}
-              className="hover:bg-muted/30 transition-colors group"
-            >
-              <TableCell className="p-0 border-0">
-                <div className="p-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <File className="h-6 w-6 text-primary" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {file.originalName || "Unknown file"}
-                      </p>
-                      <div className="flex items-center mt-1 space-x-2 text-xs text-muted-foreground">
-                        <span className="flex items-center space-x-1">
-                          <StatusIcon status={file.status} />
-                          <span className="capitalize">
-                            {file.status.toLowerCase()}
-                          </span>
-                        </span>
-                        <span>•</span>
-                        <span>{formatSize(file.size)}</span>
-                        <span>•</span>
-                        <span>
-                          {formatDistanceToNow(new Date(file.createdAt))} ago
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-1">
-                      {/* Copy public download link */}
-                      <CopyLinkButton fileId={file.id} />
-
-                      {/* Download from a specific cloud */}
-                      <DownloadDropdown file={file} />
-
-                      {/* Delete */}
-                      <button
-                        onClick={() => onDelete(file.id)}
-                        className="p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-full transition-colors"
-                        title="Delete file"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {(file.status === "DOWNLOADING" ||
-                    file.status === "PENDING") && (
-                      <div className="mt-4 w-full bg-secondary rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className={classNames(
-                            "bg-primary h-1.5 rounded-full transition-all duration-300",
-                            file.status === "PENDING"
-                              ? "w-full animate-pulse bg-primary/40"
-                              : "",
-                          )}
-                          style={{
-                            width:
-                              file.status === "DOWNLOADING"
-                                ? `${file.progress}%`
-                                : undefined,
-                          }}
-                        />
-                      </div>
-                    )}
-                </div>
-              </TableCell>
-            </TableRow>
+            <FileRow key={file.id} file={file} onDelete={onDelete} />
           ))}
         </TableBody>
       </Table>

@@ -23,6 +23,7 @@ export interface FileRecord {
   size: string | null;
   mimeType: string | null;
   status: "PENDING" | "DOWNLOADING" | "COMPLETED" | "FAILED";
+  error: string | null;
   progress: number;
   createdAt: string;
   updatedAt: string;

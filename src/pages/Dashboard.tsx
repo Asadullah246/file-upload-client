@@ -86,7 +86,7 @@ export function Dashboard() {
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="w-full max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <CloudLightning className="mx-auto h-16 w-16 text-primary mb-4" />
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
