@@ -223,6 +223,7 @@ export function DownloadPage() {
                 fileDetails={fileDetails}
                 availableProviders={availableProviders}
                 apiBase={apiBase}
+                directLink={appSettings["direct_link"] || ""}
               />
 
               {/* ── Ad Slot 2 — below download buttons ── */}

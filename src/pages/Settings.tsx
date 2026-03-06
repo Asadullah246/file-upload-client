@@ -28,6 +28,7 @@ export function Settings() {
   const [adSlot3, setAdSlot3] = useState("");
   const [adGlobalScript, setAdGlobalScript] = useState("");
   const [telegramLink, setTelegramLink] = useState("");
+  const [directLink, setDirectLink] = useState("");
   const [appLoading, setAppLoading] = useState(false);
   const [appError, setAppError] = useState("");
   const [appSuccess, setAppSuccess] = useState("");
@@ -41,6 +42,7 @@ export function Settings() {
       setAdSlot3(settings["ad_slot_3"] || "");
       setAdGlobalScript(settings["ad_global_script"] || "");
       setTelegramLink(settings["telegram_link"] || "");
+      setDirectLink(settings["direct_link"] || "");
       setAppSettingsFetched(true);
     });
   }, []);
@@ -89,6 +91,7 @@ export function Settings() {
         ad_slot_3: adSlot3,
         ad_global_script: adGlobalScript,
         telegram_link: telegramLink,
+        direct_link: directLink,
       });
       setAppSuccess("App settings saved successfully!");
     } catch (err: unknown) {
@@ -325,6 +328,24 @@ export function Settings() {
                   placeholder="Paste your ad embed code here..."
                   className="w-full px-3 py-2 border border-input rounded-md shadow-sm font-mono text-xs bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary resize-y"
                 />
+              </div>
+
+              {/* Direct Popunder Link */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1 flex items-center gap-1.5">
+                  <Megaphone className="w-4 h-4 text-primary" />
+                  Direct Link (Popunder Ad)
+                </label>
+                <input
+                  type="url"
+                  value={directLink}
+                  onChange={(e) => setDirectLink(e.target.value)}
+                  placeholder="https://www.effectivegatecpm.com/...?"
+                  className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-background text-foreground"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  If set, clicking any download button will first open this link in a new tab for 2 clicks before allowing the actual download on the 3rd click.
+                </p>
               </div>
 
               {/* Telegram Link */}

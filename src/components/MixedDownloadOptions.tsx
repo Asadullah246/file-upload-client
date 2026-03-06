@@ -7,15 +7,18 @@ interface MixedDownloadOptionsProps {
   fileDetails: FileDetails;
   availableProviders: [string, boolean][];
   apiBase: string;
+  directLink: string;
 }
 
 export function MixedDownloadOptions({
   fileDetails,
   availableProviders,
   apiBase,
+  directLink,
 }: MixedDownloadOptionsProps) {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [adClicks, setAdClicks] = useState(0);
 
   const hasProvider = (provider: string) =>
     availableProviders.some(([p]) => p === provider);
@@ -59,6 +62,28 @@ export function MixedDownloadOptions({
     }
   };
 
+  const handleInterceptedClick = (
+    btnKey: string,
+    realAction: () => void,
+  ) => {
+    if (directLink && directLink.trim() !== "" && adClicks < 2) {
+      // It's an ad click
+      setDownloading(btnKey);
+      setAdClicks((prev) => prev + 1);
+
+      // Simulate loading state for 2 seconds
+      setTimeout(() => {
+        setDownloading(null);
+      }, 2000);
+
+      // Immediately open Ad link
+      window.open(directLink, "_blank", "noopener,noreferrer");
+    } else {
+      // Real click action
+      realAction();
+    }
+  };
+
   return (
     <div className="space-y-3">
       {error && (
@@ -70,7 +95,7 @@ export function MixedDownloadOptions({
       {/* iDrive: Instant Download (Proxy) */}
       {hasProvider("idrive") && (
         <button
-          onClick={() => handleProxyDownload("idrive-instant", "idrive")}
+          onClick={() => handleInterceptedClick("idrive-instant", () => handleProxyDownload("idrive-instant", "idrive"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -89,7 +114,7 @@ export function MixedDownloadOptions({
       {/* iDrive: Fast Cloud [FSL] (Direct Pre-signed URL) */}
       {hasProvider("idrive") && (
         <button
-          onClick={() => handleDirectDownload("idrive-fast", "idrive")}
+          onClick={() => handleInterceptedClick("idrive-fast", () => handleDirectDownload("idrive-fast", "idrive"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -106,7 +131,7 @@ export function MixedDownloadOptions({
       {/* iDrive: Cloud [Resumable] (Proxy - Same as Instant) */}
       {hasProvider("idrive") && (
         <button
-          onClick={() => handleProxyDownload("idrive-resumable", "idrive")}
+          onClick={() => handleInterceptedClick("idrive-resumable", () => handleProxyDownload("idrive-resumable", "idrive"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -125,7 +150,7 @@ export function MixedDownloadOptions({
       {/* Pixeldrain: Direct URL page */}
       {hasProvider("pixeldrain") && (
         <button
-          onClick={() => handleDirectDownload("pixeldrain", "pixeldrain")}
+          onClick={() => handleInterceptedClick("pixeldrain", () => handleDirectDownload("pixeldrain", "pixeldrain"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -142,7 +167,7 @@ export function MixedDownloadOptions({
       {/* VikingFile: Direct URL page */}
       {hasProvider("vikingfile") && (
         <button
-          onClick={() => handleDirectDownload("vikingfile", "vikingfile")}
+          onClick={() => handleInterceptedClick("vikingfile", () => handleDirectDownload("vikingfile", "vikingfile"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -159,7 +184,7 @@ export function MixedDownloadOptions({
       {/* GoFile: Direct URL page */}
       {hasProvider("gofile") && (
         <button
-          onClick={() => handleDirectDownload("gofile", "gofile")}
+          onClick={() => handleInterceptedClick("gofile", () => handleDirectDownload("gofile", "gofile"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
