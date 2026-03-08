@@ -18,7 +18,7 @@ export function MixedDownloadOptions({
 }: MixedDownloadOptionsProps) {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [adClicks, setAdClicks] = useState(0);
+  const [adClicks, setAdClicks] = useState<Record<string, number>>({});
 
   const hasProvider = (provider: string) =>
     availableProviders.some(([p]) => p === provider);
@@ -66,10 +66,12 @@ export function MixedDownloadOptions({
     btnKey: string,
     realAction: () => void,
   ) => {
-    if (directLink && directLink.trim() !== "" && adClicks < 2) {
+    const clicksForThisBtn = adClicks[btnKey] || 0;
+
+    if (directLink && directLink.trim() !== "" && clicksForThisBtn < 2) {
       // It's an ad click
       setDownloading(btnKey);
-      setAdClicks((prev) => prev + 1);
+      setAdClicks((prev) => ({ ...prev, [btnKey]: clicksForThisBtn + 1 }));
 
       // Simulate loading state for 2 seconds
       setTimeout(() => {
