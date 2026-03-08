@@ -73,12 +73,7 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
     if (!isCompleted) {
       // Fallback: proxy through our backend from Google Drive
       const proxyUrl = `${apiBase}/api/download/${file.id}/drive`;
-      const a = document.createElement("a");
-      a.href = proxyUrl;
-      a.download = file.originalName || "download";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      window.open(proxyUrl, "_blank", "noopener,noreferrer");
       return;
     }
 
@@ -96,13 +91,9 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
       return;
     }
 
+    // For other providers, open the proxy URL in a new tab
     const url = `${apiBase}/api/download/${file.id}/proxy?provider=${provider}`;
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.originalName || "download";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   // Determine which provider list to render in the dropdown
