@@ -19,6 +19,7 @@ api.interceptors.request.use(
 
 export interface FileRecord {
   id: string;
+  driveFileId: string | null;
   originalName: string | null;
   size: string | null;
   mimeType: string | null;
@@ -34,6 +35,7 @@ export interface FileRecord {
   vikingfileId: string | null;
   gofileId: string | null;
   gofileUrl: string | null;
+  provider: string[]; // target providers the file is being uploaded to
 }
 
 export const fileService = {

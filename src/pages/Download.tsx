@@ -9,6 +9,9 @@ export interface FileDetails {
   originalName: string;
   mimeType: string | null;
   size: string | null;
+  status: string;
+  driveFileId: string | null;
+  targetProviders: string[];
   vikingfileUrl: string | null;
   gofileUrl: string | null;
   providers: {
@@ -65,7 +68,6 @@ export function DownloadPage() {
   const { id } = useParams<{ id: string }>();
   const [fileDetails, setFileDetails] = useState<FileDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [httpStatus, setHttpStatus] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [appSettings, setAppSettings] = useState<Record<string, string>>({});
 
@@ -81,11 +83,8 @@ export function DownloadPage() {
         setFileDetails(data);
       } catch (err: unknown) {
         const errorResponse = err as {
-          response?: { status?: number; data?: { error?: string } };
+          response?: { data?: { error?: string } };
         };
-        const status = errorResponse.response?.status;
-        setHttpStatus(status || 500);
-
         setError(
           errorResponse.response?.data?.error ||
           "File not found or no longer available."
@@ -127,6 +126,20 @@ export function DownloadPage() {
 
     fetchFile();
     fetchSettings();
+
+    // Poll for status updates when file is still processing
+    const interval = setInterval(async () => {
+      if (!id) return;
+      try {
+        const data = await fileService.getDownloadInfo(id);
+        setFileDetails(data);
+        if (data.status === "COMPLETED" || data.status === "FAILED") {
+          clearInterval(interval);
+        }
+      } catch { /* ignore polling errors */ }
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [id]);
 
   const formatSize = (bytes: string | null) => {
@@ -141,6 +154,13 @@ export function DownloadPage() {
 
   const availableProviders = fileDetails
     ? Object.entries(fileDetails.providers).filter(([, available]) => available)
+    : [];
+
+  // Determine which buttons to show based on target providers vs completed providers
+  const buttonsToShow: [string, boolean][] = fileDetails
+    ? (fileDetails.status === "COMPLETED"
+      ? availableProviders
+      : fileDetails.targetProviders.map((p) => [p, true] as [string, boolean]))
     : [];
 
   const adSlot1 = appSettings["ad_slot_1"] || "";
@@ -160,17 +180,6 @@ export function DownloadPage() {
   }
 
   if (error || !fileDetails) {
-    if (httpStatus === 409) {
-      return (
-        <div className="min-h-screen bg-background flex flex-col justify-center items-center py-12 px-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mb-6"></div>
-          <h2 className="text-2xl font-bold text-foreground">Processing...</h2>
-          <p className="mt-2 text-muted-foreground text-center max-w-md">
-            This file is currently processing in the clouds. Please wait a few moments and refresh the page.
-          </p>
-        </div>
-      );
-    }
 
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center py-12 px-4">
@@ -221,7 +230,7 @@ export function DownloadPage() {
               {/* Unified Mixed Download Buttons */}
               <MixedDownloadOptions
                 fileDetails={fileDetails}
-                availableProviders={availableProviders}
+                availableProviders={buttonsToShow}
                 apiBase={apiBase}
                 directLink={appSettings["direct_link"] || ""}
               />

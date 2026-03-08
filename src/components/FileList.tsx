@@ -13,7 +13,6 @@ import {
   Check,
   Download,
   ChevronDown,
-  Loader2,
 } from "lucide-react";
 import classNames from "classnames";
 import {
@@ -56,12 +55,34 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
     "http://localhost:3000";
 
   const providers = inferProviders(file);
+  const isCompleted = file.status === "COMPLETED";
 
-  if (file.status !== "COMPLETED" || providers.length === 0) return null;
+  // Target providers the file is being uploaded to (from the provider JSON array)
+  const targetProviders: string[] = isCompleted
+    ? providers
+    : (Array.isArray(file.provider)
+      ? file.provider.map((p: string) => p.toLowerCase())
+      : []);
+
+  // Hide if FAILED, or nothing to show
+  if (file.status === "FAILED") return null;
+  if (isCompleted && providers.length === 0) return null;
+  if (!isCompleted && targetProviders.length === 0 && !file.driveFileId) return null;
 
   const handleDownload = (provider: string) => {
+    if (!isCompleted) {
+      // Fallback: proxy through our backend from Google Drive
+      const proxyUrl = `${apiBase}/api/download/${file.id}/drive`;
+      const a = document.createElement("a");
+      a.href = proxyUrl;
+      a.download = file.originalName || "download";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+
     if (provider === "vikingfile") {
-      // VikingFile requires Cloudflare challenge — open their browse page in a new tab
       const browseUrl = `https://vikingfile.com/f/${file.vikingfileId}`;
       window.open(browseUrl, "_blank", "noopener,noreferrer");
       return;
@@ -84,6 +105,9 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
     document.body.removeChild(a);
   };
 
+  // Determine which provider list to render in the dropdown
+  const displayProviders = isCompleted ? providers : targetProviders;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -103,7 +127,7 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
         <DropdownMenuLabel className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Download from
         </DropdownMenuLabel>
-        {providers.map((provider) => {
+        {displayProviders.map((provider) => {
           const meta = PROVIDER_META[provider] || {
             label: provider,
             icon: "📦",
@@ -225,17 +249,12 @@ function FileRow({ file, onDelete }: { file: FileRecord; onDelete: (id: string) 
               <CopyLinkButton fileId={file.id} />
 
               {/* Download from a specific cloud */}
-              {file.status === "COMPLETED" ? (
-                <DownloadDropdown file={file} />
-              ) : file.status === "FAILED" ? (
+              {file.status === "FAILED" ? (
                 <div className="flex items-center text-xs font-medium text-destructive bg-destructive/10 px-2.5 py-1.5 rounded-md max-w-sm text-wrap truncate" title={file.error || "Upload failed"}>
                   {file.error || "Upload failed"}
                 </div>
               ) : (
-                <div className="flex items-center text-xs font-medium text-muted-foreground bg-muted/50 px-2.5 py-1.5 rounded-full">
-                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Processing...
-                </div>
+                <DownloadDropdown file={file} />
               )}
 
               {/* Delete */}
