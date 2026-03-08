@@ -130,10 +130,10 @@ export function MixedDownloadOptions({
         </button>
       )}
 
-      {/* iDrive: Fast Cloud [FSL] (Direct Pre-signed URL) */}
+      {/* iDrive: Fast Cloud [FSL] (Instant Proxy) */}
       {hasProvider("idrive") && (
         <button
-          onClick={() => handleInterceptedClick("idrive-fast", () => handleDirectDownload("idrive-fast", "idrive"))}
+          onClick={() => handleInterceptedClick("idrive-fast", () => handleProxyDownload("idrive-fast", "idrive"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -147,10 +147,10 @@ export function MixedDownloadOptions({
         </button>
       )}
 
-      {/* iDrive: Cloud [Resumable] (Proxy - Same as Instant) */}
+      {/* iDrive: Cloud [Resumable] (Redirect to website) */}
       {hasProvider("idrive") && (
         <button
-          onClick={() => handleInterceptedClick("idrive-resumable", () => handleProxyDownload("idrive-resumable", "idrive"))}
+          onClick={() => handleInterceptedClick("idrive-resumable", () => handleDirectDownload("idrive-resumable", "idrive"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -214,6 +214,23 @@ export function MixedDownloadOptions({
           )}
           <span className="mr-2">🗂️</span>
           {downloading === "gofile" ? "Starting..." : "GoFile Server"}
+        </button>
+      )}
+
+      {/* R2 (Cloudflare): Instant Download (Proxy) */}
+      {hasProvider("r2") && (
+        <button
+          onClick={() => handleInterceptedClick("r2", () => handleProxyDownload("r2", "r2"))}
+          disabled={downloading !== null}
+          className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
+        >
+          {downloading === "r2" ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-5 w-5" />
+          )}
+          <span className="mr-2">☁️</span>
+          {downloading === "r2" ? "Starting..." : "Cloudflare R2"}
         </button>
       )}
 

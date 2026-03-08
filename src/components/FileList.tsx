@@ -83,6 +83,12 @@ function DownloadDropdown({ file }: { file: FileRecord }) {
       return;
     }
 
+    if (provider === "pixeldrain") {
+      const browseUrl = `https://pixeldrain.com/u/${file.pixeldrainId}`;
+      window.open(browseUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     if (provider === "gofile") {
       const browseUrl = file.gofileUrl;
       if (browseUrl) {
