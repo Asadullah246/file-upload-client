@@ -222,7 +222,6 @@ export function DownloadPage() {
               <VideoPlayer
                 videoUrl={`${apiBase}/api/download/${fileDetails.id}/stream`}
                 fileName={fileDetails.originalName || "video"}
-                mimeType={fileDetails.mimeType || "video/mp4"}
               />
             </div>
           )}

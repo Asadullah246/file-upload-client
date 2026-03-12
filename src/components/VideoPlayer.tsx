@@ -4,10 +4,9 @@ import { Play, AlertCircle } from "lucide-react";
 interface VideoPlayerProps {
   videoUrl: string;
   fileName: string;
-  mimeType: string;
 }
 
-export function VideoPlayer({ videoUrl, fileName, mimeType }: VideoPlayerProps) {
+export function VideoPlayer({ videoUrl, fileName }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
 
