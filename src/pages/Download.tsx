@@ -139,8 +139,16 @@ export function DownloadPage() {
       try {
         const data = await fileService.getDownloadInfo(id);
         setFileDetails(data);
-        if (data.status === "COMPLETED" || data.status === "FAILED") {
+        // Stop polling only when FAILED, or when COMPLETED and all target providers are available
+        if (data.status === "FAILED") {
           clearInterval(interval);
+        } else if (data.status === "COMPLETED") {
+          const allProvidersReady = data.targetProviders.every(
+            (p: string) => data.providers[p as keyof typeof data.providers]
+          );
+          if (allProvidersReady) {
+            clearInterval(interval);
+          }
         }
       } catch { /* ignore polling errors */ }
     }, 5000);
@@ -158,16 +166,12 @@ export function DownloadPage() {
     return `${(num / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
 
-  const availableProviders = fileDetails
-    ? Object.entries(fileDetails.providers).filter(([, available]) => available)
-    : [];
-
-  // Determine which buttons to show based on target providers vs completed providers
-  // Show buttons during UPLOADING too (they'll use cache fallback)
+  // Always show buttons for all target providers regardless of status.
+  // MixedDownloadOptions handles fallback (cache/drive) for providers not ready yet.
   const buttonsToShow: [string, boolean][] = fileDetails
-    ? (fileDetails.status === "COMPLETED"
-      ? availableProviders
-      : fileDetails.targetProviders.map((p) => [p, true] as [string, boolean]))
+    ? fileDetails.targetProviders.map(
+        (p) => [p, fileDetails.providers[p as keyof typeof fileDetails.providers] ?? false] as [string, boolean]
+      )
     : [];
 
   const isVideoFile = fileDetails?.mimeType?.startsWith("video/") ?? false;

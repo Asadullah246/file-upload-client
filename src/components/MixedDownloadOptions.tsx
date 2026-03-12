@@ -23,7 +23,6 @@ export function MixedDownloadOptions({
   const hasProvider = (provider: string) =>
     availableProviders.some(([p]) => p === provider);
 
-  const isCompleted = fileDetails.status === "COMPLETED";
   const isUploading = fileDetails.status === "UPLOADING";
 
   /** Falls back to cache proxy (or Drive proxy) when cloud upload isn't done yet */
@@ -45,7 +44,7 @@ export function MixedDownloadOptions({
     fileDetails.providers[provider as keyof typeof fileDetails.providers] ?? false;
 
   const handleProxyDownload = (key: string, provider: string) => {
-    if (!isProviderReady(provider) && !isCompleted) { handleCacheFallback(key); return; }
+    if (!isProviderReady(provider)) { handleCacheFallback(key); return; }
     setDownloading(key);
     const proxyUrl = `${apiBase}/api/download/${fileDetails.id}/proxy?provider=${provider}`;
 
@@ -59,7 +58,7 @@ export function MixedDownloadOptions({
   };
 
   const handleDirectDownload = async (key: string, provider: string) => {
-    if (!isProviderReady(provider) && !isCompleted) { handleCacheFallback(key); return; }
+    if (!isProviderReady(provider)) { handleCacheFallback(key); return; }
     try {
       setDownloading(key);
       setError(null);
