@@ -3,6 +3,10 @@ import { useParams } from "react-router-dom";
 import { fileService, settingsService } from "../services/api";
 import { CloudLightning, FileQuestion, Send } from "lucide-react";
 import { MixedDownloadOptions } from "../components/MixedDownloadOptions";
+import { VideoPlayer } from "../components/VideoPlayer";
+import { DebugPanel } from "../components/DebugPanel";
+
+const DEBUG_ENABLED = import.meta.env.VITE_DEBUG === "true";
 
 export interface FileDetails {
   id: string;
@@ -10,8 +14,10 @@ export interface FileDetails {
   mimeType: string | null;
   size: string | null;
   status: string;
+  progress: number;
   driveFileId: string | null;
   targetProviders: string[];
+  isCached: boolean;
   vikingfileUrl: string | null;
   gofileUrl: string | null;
   providers: {
@@ -157,11 +163,14 @@ export function DownloadPage() {
     : [];
 
   // Determine which buttons to show based on target providers vs completed providers
+  // Show buttons during UPLOADING too (they'll use cache fallback)
   const buttonsToShow: [string, boolean][] = fileDetails
     ? (fileDetails.status === "COMPLETED"
       ? availableProviders
       : fileDetails.targetProviders.map((p) => [p, true] as [string, boolean]))
     : [];
+
+  const isVideoFile = fileDetails?.mimeType?.startsWith("video/") ?? false;
 
   const adSlot1 = appSettings["ad_slot_1"] || "";
   const adSlot2 = appSettings["ad_slot_2"] || "";
@@ -197,11 +206,22 @@ export function DownloadPage() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* ── Main content ─────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="sm:mx-auto sm:w-full sm:max-w-lg">
           <CloudLightning className="mx-auto h-16 w-16 text-primary mb-4" />
           <h2 className="text-center text-3xl font-extrabold text-foreground leading-tight truncate px-2">
             {fileDetails.originalName || "Unnamed File"}
           </h2>
+
+          {/* ── Video Player (only for video files) ── */}
+          {isVideoFile && (
+            <div className="mt-6">
+              <VideoPlayer
+                videoUrl={`${apiBase}/api/download/${fileDetails.id}/stream`}
+                fileName={fileDetails.originalName || "video"}
+                mimeType={fileDetails.mimeType || "video/mp4"}
+              />
+            </div>
+          )}
 
           <div className="mt-8 bg-card shadow sm:rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-5 sm:p-6">
@@ -246,6 +266,14 @@ export function DownloadPage() {
               </p>
             </div>
           </div>
+
+          {/* ── Debug Panel (dev only) ── */}
+          {DEBUG_ENABLED && (
+            <DebugPanel
+              fileDetails={fileDetails}
+              isCached={fileDetails.isCached}
+            />
+          )}
         </div>
       </div>
 

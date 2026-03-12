@@ -24,11 +24,13 @@ export function MixedDownloadOptions({
     availableProviders.some(([p]) => p === provider);
 
   const isCompleted = fileDetails.status === "COMPLETED";
+  const isUploading = fileDetails.status === "UPLOADING";
 
-  /** Falls back to Drive proxy download when cloud upload isn't done yet */
-  const handleDriveFallback = (key: string) => {
+  /** Falls back to cache proxy (or Drive proxy) when cloud upload isn't done yet */
+  const handleCacheFallback = (key: string) => {
     setDownloading(key);
-    const proxyUrl = `${apiBase}/api/download/${fileDetails.id}/drive`;
+    // Prefer cache endpoint (instant from server disk), falls back to Drive proxy internally
+    const proxyUrl = `${apiBase}/api/download/${fileDetails.id}/cache`;
     const link = document.createElement("a");
     link.href = proxyUrl;
     link.download = fileDetails.originalName || "download";
@@ -38,8 +40,12 @@ export function MixedDownloadOptions({
     setTimeout(() => setDownloading(null), 2000);
   };
 
+  /** Check if a specific provider's upload is done */
+  const isProviderReady = (provider: string) =>
+    fileDetails.providers[provider as keyof typeof fileDetails.providers] ?? false;
+
   const handleProxyDownload = (key: string, provider: string) => {
-    if (!isCompleted) { handleDriveFallback(key); return; }
+    if (!isProviderReady(provider) && !isCompleted) { handleCacheFallback(key); return; }
     setDownloading(key);
     const proxyUrl = `${apiBase}/api/download/${fileDetails.id}/proxy?provider=${provider}`;
 
@@ -53,7 +59,7 @@ export function MixedDownloadOptions({
   };
 
   const handleDirectDownload = async (key: string, provider: string) => {
-    if (!isCompleted) { handleDriveFallback(key); return; }
+    if (!isProviderReady(provider) && !isCompleted) { handleCacheFallback(key); return; }
     try {
       setDownloading(key);
       setError(null);
@@ -127,6 +133,11 @@ export function MixedDownloadOptions({
           {downloading === "idrive-instant"
             ? "Starting..."
             : "Instant Download"}
+          {isUploading && (
+            <span className="ml-2 text-xs opacity-75">
+              {isProviderReady("idrive") ? "✅" : "⏳"}
+            </span>
+          )}
         </button>
       )}
 
@@ -180,6 +191,11 @@ export function MixedDownloadOptions({
           )}
           <span className="mr-2">💧</span>
           {downloading === "pixeldrain" ? "Starting..." : "Pixeldrain (Fast)"}
+          {isUploading && (
+            <span className="ml-2 text-xs opacity-75">
+              {isProviderReady("pixeldrain") ? "✅" : "⏳"}
+            </span>
+          )}
         </button>
       )}
 
@@ -197,6 +213,11 @@ export function MixedDownloadOptions({
           )}
           <span className="mr-2">⚔️</span>
           {downloading === "vikingfile" ? "Starting..." : "VikingFile Server"}
+          {isUploading && (
+            <span className="ml-2 text-xs opacity-75">
+              {isProviderReady("vikingfile") ? "✅" : "⏳"}
+            </span>
+          )}
         </button>
       )}
 
@@ -214,6 +235,11 @@ export function MixedDownloadOptions({
           )}
           <span className="mr-2">🗂️</span>
           {downloading === "gofile" ? "Starting..." : "GoFile Server"}
+          {isUploading && (
+            <span className="ml-2 text-xs opacity-75">
+              {isProviderReady("gofile") ? "✅" : "⏳"}
+            </span>
+          )}
         </button>
       )}
 
