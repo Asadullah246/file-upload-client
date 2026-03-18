@@ -22,6 +22,11 @@ const DIRECT_PROVIDER_META: Record<
     color: "bg-purple-600 hover:bg-purple-700",
     icon: "⚔️",
   },
+  gofile: {
+    label: "GoFile Server",
+    color: "bg-indigo-600 hover:bg-indigo-700",
+    icon: "🗂️",
+  },
 };
 
 interface DirectDownloadOptionsProps {

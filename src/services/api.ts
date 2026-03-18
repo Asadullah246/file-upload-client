@@ -19,10 +19,12 @@ api.interceptors.request.use(
 
 export interface FileRecord {
   id: string;
+  driveFileId: string | null;
   originalName: string | null;
   size: string | null;
   mimeType: string | null;
-  status: "PENDING" | "DOWNLOADING" | "COMPLETED" | "FAILED";
+  status: "PENDING" | "DOWNLOADING" | "UPLOADING" | "COMPLETED" | "FAILED";
+  error: string | null;
   progress: number;
   createdAt: string;
   updatedAt: string;
@@ -31,6 +33,9 @@ export interface FileRecord {
   pixeldrainId: string | null;
   idriveKey: string | null;
   vikingfileId: string | null;
+  gofileId: string | null;
+  gofileUrl: string | null;
+  provider: string[]; // target providers the file is being uploaded to
 }
 
 export const fileService = {
@@ -69,8 +74,8 @@ export const fileService = {
       };
       throw new Error(
         err.response?.data?.error ||
-          err.message ||
-          "Failed to update credentials",
+        err.message ||
+        "Failed to update credentials",
       );
     }
   },
@@ -104,5 +109,50 @@ export const fileService = {
 
   deleteFile: async (id: string): Promise<void> => {
     await api.delete(`/files/${id}`);
+  },
+};
+
+export interface CredentialRecord {
+  id: string;
+  provider: string;
+  enabled: boolean;
+  config: Record<string, string>;
+  updatedAt: string;
+}
+
+export const credentialService = {
+  getAll: async (): Promise<CredentialRecord[]> => {
+    const response = await api.get("/api/credentials");
+    console.log("response", response.data);
+    return response.data;
+  },
+
+  update: async (
+    provider: string,
+    enabled: boolean,
+    config: Record<string, string>,
+  ): Promise<CredentialRecord> => {
+    const response = await api.put(`/api/credentials/${provider}`, {
+      enabled,
+      config,
+    });
+    return response.data;
+  },
+};
+
+export const settingsService = {
+  /**
+   * Public — used by the Download page to fetch ad codes and telegram link.
+   */
+  getPublicSettings: async (): Promise<Record<string, string>> => {
+    const response = await api.get("/api/settings");
+    return response.data;
+  },
+
+  /**
+   * Admin-only — saves all app settings at once.
+   */
+  updateSettings: async (settings: Record<string, string>): Promise<void> => {
+    await api.put("/api/settings", { settings });
   },
 };

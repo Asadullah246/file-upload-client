@@ -26,6 +26,11 @@ const PROVIDER_META: Record<
     color: "bg-purple-600 hover:bg-purple-700",
     icon: "⚔️",
   },
+  gofile: {
+    label: "GoFile",
+    color: "bg-indigo-600 hover:bg-indigo-700",
+    icon: "🗂️",
+  },
 };
 
 interface ProxyDownloadOptionsProps {
@@ -47,6 +52,14 @@ export function ProxyDownloadOptions({
         fileDetails.vikingfileUrl ||
         `https://vikingfile.com/f/${fileDetails.id}`;
       window.open(browseUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (provider === "gofile") {
+      const browseUrl = fileDetails.gofileUrl;
+      if (browseUrl) {
+        window.open(browseUrl, "_blank", "noopener,noreferrer");
+      }
       return;
     }
 

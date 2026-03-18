@@ -6,6 +6,7 @@ import {
   CloudLightning,
   User,
   ChevronDown,
+  SlidersHorizontal,
 } from "lucide-react";
 import classNames from "classnames";
 import {
@@ -77,6 +78,16 @@ export function AdminLayout() {
                 <Link to="/settings">
                   <SettingsIcon className="w-4 h-4" />
                   <span>Profile Settings</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                asChild
+                className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted focus:text-foreground focus:bg-muted transition-colors flex items-center gap-2 rounded-none border-none cursor-pointer"
+              >
+                <Link to="/cloud-controls">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span>Cloud Controls</span>
                 </Link>
               </DropdownMenuItem>
 

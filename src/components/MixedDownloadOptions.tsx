@@ -7,20 +7,44 @@ interface MixedDownloadOptionsProps {
   fileDetails: FileDetails;
   availableProviders: [string, boolean][];
   apiBase: string;
+  directLink: string;
 }
 
 export function MixedDownloadOptions({
   fileDetails,
   availableProviders,
   apiBase,
+  directLink,
 }: MixedDownloadOptionsProps) {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [adClicks, setAdClicks] = useState<Record<string, number>>({});
 
   const hasProvider = (provider: string) =>
     availableProviders.some(([p]) => p === provider);
 
+  const isUploading = fileDetails.status === "UPLOADING";
+
+  /** Falls back to cache proxy (or Drive proxy) when cloud upload isn't done yet */
+  const handleCacheFallback = (key: string) => {
+    setDownloading(key);
+    // Prefer cache endpoint (instant from server disk), falls back to Drive proxy internally
+    const proxyUrl = `${apiBase}/api/download/${fileDetails.id}/cache`;
+    const link = document.createElement("a");
+    link.href = proxyUrl;
+    link.download = fileDetails.originalName || "download";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => setDownloading(null), 2000);
+  };
+
+  /** Check if a specific provider's upload is done */
+  const isProviderReady = (provider: string) =>
+    fileDetails.providers[provider as keyof typeof fileDetails.providers] ?? false;
+
   const handleProxyDownload = (key: string, provider: string) => {
+    if (!isProviderReady(provider)) { handleCacheFallback(key); return; }
     setDownloading(key);
     const proxyUrl = `${apiBase}/api/download/${fileDetails.id}/proxy?provider=${provider}`;
 
@@ -34,6 +58,7 @@ export function MixedDownloadOptions({
   };
 
   const handleDirectDownload = async (key: string, provider: string) => {
+    if (!isProviderReady(provider)) { handleCacheFallback(key); return; }
     try {
       setDownloading(key);
       setError(null);
@@ -59,6 +84,30 @@ export function MixedDownloadOptions({
     }
   };
 
+  const handleInterceptedClick = (
+    btnKey: string,
+    realAction: () => void,
+  ) => {
+    const clicksForThisBtn = adClicks[btnKey] || 0;
+
+    if (directLink && directLink.trim() !== "" && clicksForThisBtn < 2) {
+      // It's an ad click
+      setDownloading(btnKey);
+      setAdClicks((prev) => ({ ...prev, [btnKey]: clicksForThisBtn + 1 }));
+
+      // Simulate loading state for 2 seconds
+      setTimeout(() => {
+        setDownloading(null);
+      }, 2000);
+
+      // Immediately open Ad link
+      window.open(directLink, "_blank", "noopener,noreferrer");
+    } else {
+      // Real click action
+      realAction();
+    }
+  };
+
   return (
     <div className="space-y-3">
       {error && (
@@ -70,7 +119,7 @@ export function MixedDownloadOptions({
       {/* iDrive: Instant Download (Proxy) */}
       {hasProvider("idrive") && (
         <button
-          onClick={() => handleProxyDownload("idrive-instant", "idrive")}
+          onClick={() => handleInterceptedClick("idrive-instant", () => handleProxyDownload("idrive-instant", "idrive"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -83,13 +132,18 @@ export function MixedDownloadOptions({
           {downloading === "idrive-instant"
             ? "Starting..."
             : "Instant Download"}
+          {isUploading && (
+            <span className="ml-2 text-xs opacity-75">
+              {isProviderReady("idrive") ? "✅" : "⏳"}
+            </span>
+          )}
         </button>
       )}
 
-      {/* iDrive: Fast Cloud [FSL] (Direct Pre-signed URL) */}
+      {/* iDrive: Fast Cloud [FSL] (Instant Proxy) */}
       {hasProvider("idrive") && (
         <button
-          onClick={() => handleDirectDownload("idrive-fast", "idrive")}
+          onClick={() => handleInterceptedClick("idrive-fast", () => handleProxyDownload("idrive-fast", "idrive"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -103,10 +157,10 @@ export function MixedDownloadOptions({
         </button>
       )}
 
-      {/* iDrive: Cloud [Resumable] (Proxy - Same as Instant) */}
+      {/* iDrive: Cloud [Resumable] (Redirect to website) */}
       {hasProvider("idrive") && (
         <button
-          onClick={() => handleProxyDownload("idrive-resumable", "idrive")}
+          onClick={() => handleInterceptedClick("idrive-resumable", () => handleDirectDownload("idrive-resumable", "idrive"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -125,7 +179,7 @@ export function MixedDownloadOptions({
       {/* Pixeldrain: Direct URL page */}
       {hasProvider("pixeldrain") && (
         <button
-          onClick={() => handleDirectDownload("pixeldrain", "pixeldrain")}
+          onClick={() => handleInterceptedClick("pixeldrain", () => handleDirectDownload("pixeldrain", "pixeldrain"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -136,13 +190,18 @@ export function MixedDownloadOptions({
           )}
           <span className="mr-2">💧</span>
           {downloading === "pixeldrain" ? "Starting..." : "Pixeldrain (Fast)"}
+          {isUploading && (
+            <span className="ml-2 text-xs opacity-75">
+              {isProviderReady("pixeldrain") ? "✅" : "⏳"}
+            </span>
+          )}
         </button>
       )}
 
       {/* VikingFile: Direct URL page */}
       {hasProvider("vikingfile") && (
         <button
-          onClick={() => handleDirectDownload("vikingfile", "vikingfile")}
+          onClick={() => handleInterceptedClick("vikingfile", () => handleDirectDownload("vikingfile", "vikingfile"))}
           disabled={downloading !== null}
           className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
         >
@@ -153,6 +212,50 @@ export function MixedDownloadOptions({
           )}
           <span className="mr-2">⚔️</span>
           {downloading === "vikingfile" ? "Starting..." : "VikingFile Server"}
+          {isUploading && (
+            <span className="ml-2 text-xs opacity-75">
+              {isProviderReady("vikingfile") ? "✅" : "⏳"}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* GoFile: Direct URL page */}
+      {hasProvider("gofile") && (
+        <button
+          onClick={() => handleInterceptedClick("gofile", () => handleDirectDownload("gofile", "gofile"))}
+          disabled={downloading !== null}
+          className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
+        >
+          {downloading === "gofile" ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <Zap className="mr-2 h-5 w-5" />
+          )}
+          <span className="mr-2">🗂️</span>
+          {downloading === "gofile" ? "Starting..." : "GoFile Server"}
+          {isUploading && (
+            <span className="ml-2 text-xs opacity-75">
+              {isProviderReady("gofile") ? "✅" : "⏳"}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* R2 (Cloudflare): Instant Download (Proxy) */}
+      {hasProvider("r2") && (
+        <button
+          onClick={() => handleInterceptedClick("r2", () => handleProxyDownload("r2", "r2"))}
+          disabled={downloading !== null}
+          className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-wait"
+        >
+          {downloading === "r2" ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-5 w-5" />
+          )}
+          <span className="mr-2">☁️</span>
+          {downloading === "r2" ? "Starting..." : "Cloudflare R2"}
         </button>
       )}
 
