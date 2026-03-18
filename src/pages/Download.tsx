@@ -6,7 +6,7 @@ import { MixedDownloadOptions } from "../components/MixedDownloadOptions";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { DebugPanel } from "../components/DebugPanel";
 
-const DEBUG_ENABLED = import.meta.env.VITE_DEBUG || false;
+const DEBUG_ENABLED = import.meta.env.VITE_DEBUG === "true";
 
 export interface FileDetails {
   id: string;
