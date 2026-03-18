@@ -40,7 +40,7 @@ export interface FileRecord {
 
 export const fileService = {
   uploadFile: async (url: string): Promise<FileRecord> => {
-    const response = await api.post("/files/upload", { url });
+    const response = await api.post("/api/files/upload", { url });
     return response.data.file;
   },
 
@@ -81,7 +81,7 @@ export const fileService = {
   },
 
   getFiles: async (): Promise<FileRecord[]> => {
-    const response = await api.get("/files");
+    const response = await api.get("/api/files");
     return response.data;
   },
 
@@ -108,7 +108,7 @@ export const fileService = {
   },
 
   deleteFile: async (id: string): Promise<void> => {
-    await api.delete(`/files/${id}`);
+    await api.delete(`/api/files/${id}`);
   },
 };
 
